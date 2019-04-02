@@ -4,7 +4,6 @@ import responder
 from tortoise import Tortoise
 from models import User, Group, Person
 
-
 api = responder.API()
 
 
@@ -26,17 +25,23 @@ async def init_db():
 
 @api.route("/api/v1.0/users")
 async def get_users(_, resp):
+    """
+    Return all Users
+    :param _:
+    :param resp:
+    :return: json
+    """
 
-    # init db
-    await init_db()
+    users = dict()
 
     # fetch the users from the database
     data = await User.all()
 
-    users = {
-        "id": data.id,
-        "name": data.name
-    }
+    for rec in data:
+        users.update({
+            "id": rec.id,
+            "name": rec.name
+        })
 
     # return the response
     resp.media = users
@@ -44,9 +49,6 @@ async def get_users(_, resp):
 
 @api.route("/api/v1.0/user/{username}")
 async def get_user(_, resp, username: str):
-
-    # init db
-    await init_db()
 
     # fetch the new user
     user = await User.filter(name=username).first()
@@ -64,18 +66,15 @@ async def get_groups(_, resp):
     :return: json
     """
 
-    # init db
-    await init_db()
+    groups = dict()
 
     # query the database for all groups
     data = await Group.all()
 
     # make the queryset obj json serializable
-    groups = {
-        "id": data.id,
-        "group": data.group_name,
-        "status": data.active
-    }
+    for rec in data:
+        groups["id"] = rec.id
+        groups["name"] = rec.group_name
 
     # return the response
     resp.media = groups
@@ -89,9 +88,6 @@ async def get_persons(_, resp):
     :param resp:
     :return: json
     """
-
-    # init db
-    await init_db()
 
     # create a Person object
     await Person.create(first_name="Marshall", last_name="Madison", age=35, phone="910-555-1212")
