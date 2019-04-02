@@ -1,0 +1,7 @@
+# .gitignore
+
+.idea/
+.env/
+*.sqlite3
+*.db
+*.pyc
