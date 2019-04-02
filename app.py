@@ -30,11 +30,26 @@ async def get_users(_, resp):
     # init db
     await init_db()
 
-    # create a new user
-    await User.create(name="Bethany Ferguson")
+    # fetch the users from the database
+    data = await User.all()
+
+    users = {
+        "id": data.id,
+        "name": data.name
+    }
+
+    # return the response
+    resp.media = users
+
+
+@api.route("/api/v1.0/user/{username}")
+async def get_user(_, resp, username: str):
+
+    # init db
+    await init_db()
 
     # fetch the new user
-    user = await User.filter(name="Bethany Ferguson").first()
+    user = await User.filter(name=username).first()
 
     # return the response
     resp.text = f"Hello, {user.name}"
@@ -49,15 +64,20 @@ async def get_groups(_, resp):
     :return: json
     """
 
-    # query the database
+    # init db
+    await init_db()
+
+    # query the database for all groups
     data = await Group.all()
 
+    # make the queryset obj json serializable
     groups = {
         "id": data.id,
         "group": data.group_name,
         "status": data.active
     }
 
+    # return the response
     resp.media = groups
 
 
