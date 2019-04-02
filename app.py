@@ -32,16 +32,18 @@ async def get_users(_, resp):
     :return: json
     """
 
-    users = dict()
+    users = []
 
     # fetch the users from the database
     data = await User.all()
 
     for rec in data:
-        users.update({
+        _users = {
             "id": rec.id,
             "name": rec.name
-        })
+        }
+
+        users.append(_users)
 
     # return the response
     resp.media = users
@@ -65,16 +67,21 @@ async def get_groups(_, resp):
     :param resp:
     :return: json
     """
-
-    groups = dict()
+    # create an empty dict
+    groups = []
 
     # query the database for all groups
     data = await Group.all()
 
+    # add group_name to dict
     # make the queryset obj json serializable
     for rec in data:
-        groups["id"] = rec.id
-        groups["name"] = rec.group_name
+        _group = {
+            'id': rec.id,
+            'name': rec.group_name
+        }
+
+        groups.append(_group)
 
     # return the response
     resp.media = groups
@@ -90,18 +97,23 @@ async def get_persons(_, resp):
     """
 
     # create a Person object
-    await Person.create(first_name="Marshall", last_name="Madison", age=35, phone="910-555-1212")
+    # await Person.create(first_name="Marshall", last_name="Madison", age=35, phone="910-555-1212")
+
+    persons = []
 
     # fetch the new Person object
     data = await Person.all()
 
     # make the queryset json serializable
-    persons = {
-        'first_name': data.first_name,
-        'last_name': data.last_name,
-        'age': data.age,
-        'phone': data.phone
-    }
+    for rec in data:
+        _persons = {
+            'first_name': rec.first_name,
+            'last_name': rec.last_name,
+            'age': rec.age,
+            'phone': rec.phone
+        }
+
+        persons.append(_persons)
 
     # return the response as json
     resp.media = persons
