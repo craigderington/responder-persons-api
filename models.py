@@ -60,6 +60,7 @@ class MeetUp(Model):
 
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255)
+    location = fields.JSONField()
     status = fields.BooleanField(default=True)
 
     class Meta:
@@ -90,3 +91,7 @@ class Event(Model):
         if self.name and self.event_date:
             return f"{self.event_name} {self.event_date}"
         return self.id
+
+    def get_participants(self):
+        if self.participants is not None:
+            return [self.participants]
