@@ -1,13 +1,17 @@
 # app.py
 
+import os
 import responder
+from starlette.exceptions import HTTPException
 from tortoise import Tortoise
+from tortoise.exceptions import DoesNotExist, MultipleObjectsReturned
 from models import User, Group, Person
 
-api = responder.API()
+api = responder.API(secret_key=os.urandom(64))
+debug = True
 
 
-@api.on_event("shutdown")
+@api.on_event("cleanup")
 async def close_db_connection():
     await Tortoise.close_connections()
 
@@ -35,28 +39,42 @@ async def get_users(_, resp):
     users = []
 
     # fetch the users from the database
-    data = await User.all()
+    try:
+        data = await User.all()
 
-    for rec in data:
-        _users = {
-            "id": rec.id,
-            "name": rec.name
-        }
+        for rec in data:
+            _users = {
+                "id": rec.id,
+                "name": rec.name
+            }
 
-        users.append(_users)
+            users.append(_users)
 
-    # return the response
-    resp.media = users
+        # return the response
+        resp.media = users
+
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=404,
+            detail=None
+        )
 
 
 @api.route("/api/v1.0/user/{username}")
 async def get_user(_, resp, username: str):
 
     # fetch the new user
-    user = await User.filter(name=username).first()
+    try:
+        user = await User.filter(name=username).first()
 
-    # return the response
-    resp.text = f"Hello, {user.name}"
+        # return the response in plain text
+        resp.text = f"Hello, {user.name}"
+
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=404,
+            detail=None
+        )
 
 
 @api.route("/api/v1.0/groups")
@@ -71,20 +89,27 @@ async def get_groups(_, resp):
     groups = []
 
     # query the database for all groups
-    data = await Group.all()
+    try:
+        data = await Group.all()
 
-    # add group_name to dict
-    # make the queryset obj json serializable
-    for rec in data:
-        _group = {
-            'id': rec.id,
-            'name': rec.group_name
-        }
+        # add group_name to dict
+        # make the queryset obj json serializable
+        for rec in data:
+            _group = {
+                'id': rec.id,
+                'name': rec.group_name
+            }
 
-        groups.append(_group)
+            groups.append(_group)
 
-    # return the response
-    resp.media = groups
+        # return the response
+        resp.media = groups
+
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=404,
+            detail=None
+        )
 
 
 @api.route("/api/v1.0/persons")
@@ -102,25 +127,33 @@ async def get_persons(_, resp):
     persons = []
 
     # fetch the new Person object
-    data = await Person.all()
+    try:
+        data = await Person.all()
 
-    # make the queryset json serializable
-    for rec in data:
-        _persons = {
-            'first_name': rec.first_name,
-            'last_name': rec.last_name,
-            'age': rec.age,
-            'phone': rec.phone
-        }
+        # make the queryset json serializable
+        for rec in data:
+            _persons = {
+                'first_name': rec.first_name,
+                'last_name': rec.last_name,
+                'age': rec.age,
+                'phone': rec.phone
+            }
 
-        persons.append(_persons)
+            persons.append(_persons)
 
-    # return the response as json
-    resp.media = persons
+        # return the response as json
+        resp.media = persons
+
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=404,
+            detail=None
+        )
 
 
 if __name__ == "__main__":
     api.run(
         address="0.0.0.0",
-        port=7001
+        port=7001,
+        debug=debug
     )
