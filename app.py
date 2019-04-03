@@ -4,7 +4,7 @@ import os
 import responder
 from starlette.exceptions import HTTPException
 from tortoise import Tortoise
-from tortoise.exceptions import DoesNotExist, MultipleObjectsReturned, OperationalError
+from tortoise.exceptions import DoesNotExist, OperationalError
 from models import User, Group, Person
 
 api = responder.API(secret_key=os.urandom(64))
