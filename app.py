@@ -11,7 +11,7 @@ api = responder.API(secret_key=os.urandom(64))
 debug = True
 
 
-@api.on_event("cleanup")
+@api.on_event("shutdown")
 async def close_db_connection():
     await Tortoise.close_connections()
 
