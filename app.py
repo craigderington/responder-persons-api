@@ -4,7 +4,7 @@ import os
 import responder
 from starlette.exceptions import HTTPException
 from tortoise import Tortoise
-from tortoise.exceptions import DoesNotExist, MultipleObjectsReturned
+from tortoise.exceptions import DoesNotExist, MultipleObjectsReturned, OperationalError
 from models import User, Group, Person
 
 api = responder.API(secret_key=os.urandom(64))
@@ -28,7 +28,7 @@ async def init_db():
 
 
 @api.route("/api/v1.0/users")
-async def get_users(_, resp):
+async def get_users(req, resp):
     """
     Return all Users
     :param _:
@@ -38,26 +38,40 @@ async def get_users(_, resp):
 
     users = []
 
-    # fetch the users from the database
-    try:
-        data = await User.all()
+    if req.method == 'post':
+        resp.text = "Can not create new users from this endpoint."
 
-        for rec in data:
-            _users = {
-                "id": rec.id,
-                "name": rec.name
-            }
+    # default method
+    elif req.method == 'get':
 
-            users.append(_users)
+        # fetch the users from the database
+        try:
+            data = await User.all()
 
-        # return the response
-        resp.media = users
+            for rec in data:
+                _users = {
+                    "id": rec.id,
+                    "name": rec.name
+                }
 
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404,
-            detail=None
-        )
+                users.append(_users)
+
+            # return the response
+            resp.media = users
+
+        except DoesNotExist:
+            raise HTTPException(
+                status_code=404,
+                detail=None
+            )
+
+    else:
+
+        # respond method not allowed and send a fake 405
+        resp.media = {
+            "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
+            "Status": "405"
+        }
 
 
 @api.route("/api/v1.0/user/{username}")
@@ -78,42 +92,79 @@ async def get_user(_, resp, username: str):
 
 
 @api.route("/api/v1.0/groups")
-async def get_groups(_, resp):
+async def get_groups(req, resp):
     """
     Get a list of Groups
     :param _:
     :param resp:
     :return: json
     """
-    # create an empty dict
-    groups = []
 
-    # query the database for all groups
-    try:
-        data = await Group.all()
+    # create a new group on post
+    if req.method == 'post':
 
-        # add group_name to dict
-        # make the queryset obj json serializable
-        for rec in data:
-            _group = {
-                'id': rec.id,
-                'name': rec.group_name
-            }
+        # get the params
+        data = req.params
 
-            groups.append(_group)
+        if data:
+            _group = req.params.get('group')
 
-        # return the response
-        resp.media = groups
+            try:
+                group = await Group.create(group_name=_group)
 
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404,
-            detail=None
-        )
+                resp.media = {
+                    "Success": f"{group} was successfully added..."
+                }
+
+            except OperationalError as db_err:
+                raise HTTPException(
+                    status_code=500,
+                    detail=str(db_err)
+                )
+        else:
+            # return response
+            resp.text = "No params found in the request.  Operation aborted."
+
+    # get method
+    elif req.method == 'get':
+
+        # create an group dict
+        groups = []
+
+        # query the database for all groups
+        try:
+            data = await Group.all()
+
+            # add group_name to dict
+            # make the queryset obj json serializable
+            for rec in data:
+                _group = {
+                    'id': rec.id,
+                    'name': rec.group_name
+                }
+
+                groups.append(_group)
+
+            # return the response
+            resp.media = groups
+
+        except DoesNotExist:
+            raise HTTPException(
+                status_code=404,
+                detail=None
+            )
+
+    else:
+
+        # respond method not allowed and send a fake 405
+        resp.media = {
+            "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
+            "Status": "405"
+        }
 
 
 @api.route("/api/v1.0/persons")
-async def get_persons(_, resp):
+async def get_persons(req, resp):
     """
     Get a list of persons
     :param _:
@@ -121,34 +172,77 @@ async def get_persons(_, resp):
     :return: json
     """
 
-    # create a Person object
-    # await Person.create(first_name="Marshall", last_name="Madison", age=35, phone="910-555-1212")
+    # add a new person
+    if req.method == 'post':
 
-    persons = []
+        # get the params
+        data = req.params
 
-    # fetch the new Person object
-    try:
-        data = await Person.all()
+        if data:
+            f_name = req.params.get('first_name')
+            l_name = req.params.get('last_name')
+            age = req.params.get('age')
+            phone = req.params.get('phone')
 
-        # make the queryset json serializable
-        for rec in data:
-            _persons = {
-                'first_name': rec.first_name,
-                'last_name': rec.last_name,
-                'age': rec.age,
-                'phone': rec.phone
-            }
+            # insert the record
+            try:
+                await Person.create(first_name=f_name, last_name=l_name, age=age, phone=phone)
 
-            persons.append(_persons)
+                # return the response
+                resp.media = {
+                    "First Name": f_name,
+                    "Last Name": l_name,
+                    "Age": age,
+                    "Phone": phone
+                }
 
-        # return the response as json
-        resp.media = persons
+            except OperationalError as db_err:
+                raise HTTPException(
+                    status_code=500,
+                    detail=str(db_err)
+                )
 
-    except DoesNotExist:
-        raise HTTPException(
-            status_code=404,
-            detail=None
-        )
+        else:
+            # return error response
+            resp.text = "No params found in the request.  Operation aborted."
+
+    # default method
+    elif req.method == 'get':
+
+        # create an empty list
+        persons = []
+
+        # fetch the new Person object
+        try:
+            data = await Person.all()
+
+            # make the queryset json serializable
+            for rec in data:
+                _persons = {
+                    'first_name': rec.first_name,
+                    'last_name': rec.last_name,
+                    'age': rec.age,
+                    'phone': rec.phone
+                }
+
+                persons.append(_persons)
+
+            # return the response as json
+            resp.media = persons
+
+        except DoesNotExist:
+            raise HTTPException(
+                status_code=404,
+                detail=None
+            )
+
+    else:
+
+        # respond method not allowed and send a fake 405
+        resp.media = {
+            "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
+            "Status": "405"
+        }
 
 
 if __name__ == "__main__":
