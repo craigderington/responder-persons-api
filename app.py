@@ -69,7 +69,7 @@ async def get_users(req, resp):
 
     else:
 
-        # respond method not allowed send a 405
+        # method not allowed, send a 405
         resp.status_code = api.status_codes.HTTP_405
         resp.media = {
             "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
@@ -161,7 +161,7 @@ async def get_groups(req, resp):
 
     else:
 
-        # respond method not allowed and 405
+        # method not allowed, send a 405
         resp.status_code = api.status_codes.HTTP_405
         resp.media = {
             "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
@@ -246,7 +246,7 @@ async def get_persons(req, resp):
 
     else:
 
-        # respond method not allowed and 405
+        # method not allowed, send 405
         resp.status_code = api.status_codes.HTTP_405
         resp.media = {
             "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
