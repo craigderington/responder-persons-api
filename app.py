@@ -44,9 +44,11 @@ async def get_users(req, resp):
     # default method
     elif req.method == 'get':
 
+        resp.status_code = api.status_codes.HTTP_200
+
         # fetch the users from the database
         try:
-            data = await User.all()
+            data = await User.all().limit(10)
 
             for rec in data:
                 _users = {
@@ -67,10 +69,11 @@ async def get_users(req, resp):
 
     else:
 
-        # respond method not allowed and send a fake 405
+        # respond method not allowed send a 405
+        resp.status_code = api.status_codes.HTTP_405
         resp.media = {
             "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
-            "Status": "405"
+            "Status": resp.status_code
         }
 
 
@@ -82,6 +85,7 @@ async def get_user(_, resp, username: str):
         user = await User.filter(name=username).first()
 
         # return the response in plain text
+        resp.status_code = api.status_codes.HTTP_200
         resp.text = f"Hello, {user.name}"
 
     except DoesNotExist:
@@ -112,6 +116,7 @@ async def get_groups(req, resp):
             try:
                 group = await Group.create(group_name=_group)
 
+                resp.status_code = api.status_codes.HTTP_201
                 resp.media = {
                     "Success": f"{group} was successfully added..."
                 }
@@ -156,10 +161,11 @@ async def get_groups(req, resp):
 
     else:
 
-        # respond method not allowed and send a fake 405
+        # respond method not allowed and 405
+        resp.status_code = api.status_codes.HTTP_405
         resp.media = {
             "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
-            "Status": "405"
+            "Status": resp.status_code
         }
 
 
@@ -189,6 +195,7 @@ async def get_persons(req, resp):
                 await Person.create(first_name=f_name, last_name=l_name, age=age, phone=phone)
 
                 # return the response
+                resp.status_code = api.status_codes.HTTP_201
                 resp.media = {
                     "First Name": f_name,
                     "Last Name": l_name,
@@ -214,7 +221,7 @@ async def get_persons(req, resp):
 
         # fetch the new Person object
         try:
-            data = await Person.all()
+            data = await Person.all().limit(25)
 
             # make the queryset json serializable
             for rec in data:
@@ -228,6 +235,7 @@ async def get_persons(req, resp):
                 persons.append(_persons)
 
             # return the response as json
+            resp.status_code = api.status_codes.HTTP_200
             resp.media = persons
 
         except DoesNotExist:
@@ -238,10 +246,11 @@ async def get_persons(req, resp):
 
     else:
 
-        # respond method not allowed and send a fake 405
+        # respond method not allowed and 405
+        resp.status_code = api.status_codes.HTTP_405
         resp.media = {
             "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
-            "Status": "405"
+            "Status": resp.status_code
         }
 
 
