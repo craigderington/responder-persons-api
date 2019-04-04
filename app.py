@@ -197,10 +197,10 @@ async def get_persons(req, resp):
                 # return the response
                 resp.status_code = api.status_codes.HTTP_201
                 resp.media = {
-                    "First Name": f_name,
-                    "Last Name": l_name,
-                    "Age": age,
-                    "Phone": phone
+                    "first_name": f_name,
+                    "last_name": l_name,
+                    "age": age,
+                    "phone": phone
                 }
 
             except OperationalError as db_err:
