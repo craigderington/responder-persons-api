@@ -39,6 +39,7 @@ async def get_users(req, resp):
     users = []
 
     if req.method == 'post':
+        resp.status_code = api.status_codes.HTTP_403
         resp.text = "Can not create new users from this endpoint."
 
     # default method
@@ -127,7 +128,8 @@ async def get_groups(req, resp):
                     detail=str(db_err)
                 )
         else:
-            # return response
+            # return error response and 400 bad request
+            resp.status_code = api.status_codes.HTTP_400
             resp.text = "No params found in the request.  Operation aborted."
 
     # get method
@@ -210,7 +212,8 @@ async def get_persons(req, resp):
                 )
 
         else:
-            # return error response
+            # return error response and 400 bad request
+            resp.status_code = api.status_codes.HTTP_400
             resp.text = "No params found in the request.  Operation aborted."
 
     # default method
