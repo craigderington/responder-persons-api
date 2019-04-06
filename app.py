@@ -257,6 +257,38 @@ async def get_persons(req, resp):
         }
 
 
+@api.route('/api/v1.0/persons/count')
+async def get_persons_count(req, resp):
+    """
+    Get a count on the list of persons
+    :param req:
+    :param resp:
+    :return: count int; json
+    """
+    if req.method == 'get':
+
+        try:
+            total_persons = await Person.all().count()
+            resp.status_code = api.status_codes.HTTP_200
+            resp.media = {
+                "total_persons": int(total_persons)
+            }
+
+        except DoesNotExist as err:
+            raise HTTPException(
+                status_code=500,
+                detail=str(err)
+            )
+
+    # method not allow
+    else:
+        resp.status_code = api.status_codes.HTTP_405
+        resp.media = {
+            "Error": "Method: " + f"{req.method} is not allowed.  Operation aborted.",
+            "Status": resp.status_code
+        }
+
+
 if __name__ == "__main__":
     api.run(
         address="0.0.0.0",
