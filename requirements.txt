@@ -44,7 +44,7 @@ starlette==0.10.7
 tortoise-orm==0.11.8
 typesystem==0.2.1
 urllib3==1.24.2
-uvicorn==0.6.1
+uvicorn==0.11.7
 uvloop==0.12.2
 websockets==7.0
 whitenoise==4.1.2
