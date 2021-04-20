@@ -28,7 +28,7 @@ more-itertools==7.0.0
 parse==1.11.1
 pluggy==0.9.0
 promise==2.2.1
-py==1.8.0
+py==1.10.0
 PyPika==0.26.0
 pytest==4.4.0
 python-multipart==0.0.5
